@@ -11,7 +11,7 @@ from logger import log_event, log_violation_json
 from config import ALLOWED_CLASSES, VIOLATION_CLASSES
 
 # 🔥 CHANGE THIS
-BACKEND_URL = "http://192.168.X.X:8000/report"
+BACKEND_URL = "http://localhost:8000/report"
 
 # ─────────────────────────────────────────────
 # CONFIG

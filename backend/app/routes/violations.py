@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
 from app.models.db_models import Violation, Detection
+from app.core.config import SUPABASE_URL, SUPABASE_ANON_KEY
+from supabase import create_client
 
 import json
 import os
@@ -10,8 +12,11 @@ import uuid
 
 router = APIRouter()
 
-STORAGE_DIR = "storage"
-os.makedirs(STORAGE_DIR, exist_ok=True)
+# Ensure Supabase credentials are available
+if not SUPABASE_ANON_KEY:
+    raise ValueError("SUPABASE_ANON_KEY environment variable is not set")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 
 # 🚨 POST: Receive violation
@@ -30,17 +35,20 @@ async def receive_violation(
             file_ext = ".jpg"
 
         unique_name = f"{uuid.uuid4()}{file_ext}"
-        image_path = os.path.join(STORAGE_DIR, unique_name)
 
-        # 🔹 Save image
-        with open(image_path, "wb") as f:
-            f.write(await image.read())
+        # 🔹 Read image data
+        image_data = await image.read()
+
+        # 🔹 Upload to Supabase storage
+        bucket_name = "violations"  # Assume bucket name
+        response = supabase.storage.from_(bucket_name).upload(unique_name, image_data)
+        image_url = supabase.storage.from_(bucket_name).get_public_url(unique_name)
 
         # 🔹 Create violation
         violation = Violation(
             timestamp=report.get("timestamp"),
             camera=report.get("camera"),
-            image_path=image_path,
+            image_path=image_url,  # Store URL instead of local path
             violations=report.get("violations"),
         )
 

@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-
-DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost/sentry_db"
+from app.core.config import DATABASE_URL
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
